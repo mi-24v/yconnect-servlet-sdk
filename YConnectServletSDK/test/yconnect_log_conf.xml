@@ -23,63 +23,64 @@
  THE SOFTWARE.
 -->
 
-<!DOCTYPE log4j:configuration SYSTEM "log4j.dtd">
-<log4j:configuration xmlns:log4j="http://jakarta.apache.org/log4j/">
+<Configuration>
 
-    <appender name="FILE" class="org.apache.log4j.FileAppender">
-        <param name="File" value="yconnect.log" />
-        <layout class="org.apache.log4j.PatternLayout">
-            <param name="ConversionPattern" value="%d{yyyy/MM/dd HH:mm:ss.SSS} [%p]%r:%m%n" />
-        </layout>
-    </appender>
+    <Appenders>
+        <File name="FILE" fileName="yconnect.log">
+            <PatternLayout>
+                <Pattern>%d{yyyy/MM/dd HH:mm:ss.SSS} [%p]%r:%m%n</Pattern>
+            </PatternLayout>
+        </File>
+    </Appenders>
 
-    <category name="jp.co.yahoo.yconnect.core.util.YConnectLogger">
-        <priority value="debug" />
-        <appender-ref ref="FILE" />
-    </category>
+    <Loggers>
+        <Logger name="jp.co.yahoo.yconnect.core.util.YConnectLogger">
+            <Level>debug</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
 
-    <category name="org.apache.http.impl.conn.BasicClientConnectionManager">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
+        <Logger name="org.apache.http.impl.conn.BasicClientConnectionManager">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
 
-    <category name="org.apache.http.impl.conn.DefaultClientConnectionOperator">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
+        <Logger name="org.apache.http.impl.conn.DefaultClientConnectionOperator">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
 
-    <category name="org.apache.http.client.protocol.RequestAddCookies">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
+        <Logger name="org.apache.http.client.protocol.RequestAddCookies">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
 
-    <category name="org.apache.http.client.protocol.RequestAuthCache">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-    <category name="org.apache.http.client.protocol.RequestProxyAuthentication">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-    <category name="org.apache.http.impl.client.DefaultHttpClient">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-    <category name="org.apache.http.impl.conn.DefaultClientConnection">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-    <category name="org.apache.http.wire">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-    <category name="org.apache.http.headers">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-    <category name="org.apache.http.client.protocol.ResponseProcessCookies">
-        <priority value="warn" />
-        <appender-ref ref="FILE" />
-    </category>
-
-</log4j:configuration>
+        <Logger name="org.apache.http.client.protocol.RequestAuthCache">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+        <Logger name="org.apache.http.client.protocol.RequestProxyAuthentication">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+        <Logger name="org.apache.http.impl.client.DefaultHttpClient">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+        <Logger name="org.apache.http.impl.conn.DefaultClientConnection">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+        <Logger name="org.apache.http.wire">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+        <Logger name="org.apache.http.headers">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+        <Logger name="org.apache.http.client.protocol.ResponseProcessCookies">
+            <Level>warn</Level>
+            <AppenderRef ref="FILE"/>
+        </Logger>
+    </Loggers>
+</Configuration>
