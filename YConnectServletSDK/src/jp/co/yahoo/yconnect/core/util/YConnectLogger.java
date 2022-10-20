@@ -36,8 +36,14 @@ public class YConnectLogger {
 
     private static String CONF_FILE = "yconnect_log_conf.xml";
 
+    public static void setFilePath(String path) {
+        YConnectLogger.CONF_FILE = path;
+    }
+
     static {
-        System.setProperty("log4j2.configurationFile", CONF_FILE);
+        if (System.getProperty("log4j2.configurationFile") == null) {
+            System.setProperty("log4j2.configurationFile", CONF_FILE);
+        }
     }
 
     private static final Logger log = LogManager.getLogger(YConnectLogger.class.getName());
@@ -60,9 +66,5 @@ public class YConnectLogger {
 
     public static void fatal(Object object, String message) {
         log.fatal("{} ({})", message, object.getClass().getName());
-    }
-
-    public static void setFilePath(String path) {
-        YConnectLogger.CONF_FILE = path;
     }
 }
