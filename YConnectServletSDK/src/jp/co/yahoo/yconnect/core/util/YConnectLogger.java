@@ -44,6 +44,10 @@ public class YConnectLogger {
         if (System.getProperty("log4j2.configurationFile") == null) {
             System.setProperty("log4j2.configurationFile", CONF_FILE);
         }
+        if (System.getenv("YCONNECT_LOGGING_CONF_PATH") != null) {
+            System.setProperty(
+                    "log4j2.configurationFile", System.getenv("YCONNECT_LOGGING_CONF_PATH"));
+        }
     }
 
     private static final Logger log = LogManager.getLogger(YConnectLogger.class.getName());
