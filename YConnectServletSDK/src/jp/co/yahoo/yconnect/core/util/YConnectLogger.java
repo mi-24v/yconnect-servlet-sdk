@@ -24,8 +24,8 @@
 
 package jp.co.yahoo.yconnect.core.util;
 
-import org.apache.log4j.Logger;
-import org.apache.log4j.xml.DOMConfigurator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 /**
  * YConnect Logger Class
@@ -34,36 +34,41 @@ import org.apache.log4j.xml.DOMConfigurator;
  */
 public class YConnectLogger {
 
-    private static final Logger log = Logger.getLogger(YConnectLogger.class.getName());
-
     private static String CONF_FILE = "yconnect_log_conf.xml";
-
-    public static void debug(Object object, String message) {
-        DOMConfigurator.configure(CONF_FILE);
-        log.debug(message + " (" + object.getClass().getName() + ")");
-    }
-
-    public static void info(Object object, String message) {
-        DOMConfigurator.configure(CONF_FILE);
-        log.info(message + " (" + object.getClass().getName() + ")");
-    }
-
-    public static void warn(Object object, String message) {
-        DOMConfigurator.configure(CONF_FILE);
-        log.warn(message + " (" + object.getClass().getName() + ")");
-    }
-
-    public static void error(Object object, String message) {
-        DOMConfigurator.configure(CONF_FILE);
-        log.error(message + " (" + object.getClass().getName() + ")");
-    }
-
-    public static void fatal(Object object, String message) {
-        DOMConfigurator.configure(CONF_FILE);
-        log.fatal(message + " (" + object.getClass().getName() + ")");
-    }
 
     public static void setFilePath(String path) {
         YConnectLogger.CONF_FILE = path;
+    }
+
+    static {
+        if (System.getProperty("log4j2.configurationFile") == null) {
+            System.setProperty("log4j2.configurationFile", CONF_FILE);
+        }
+        if (System.getenv("YCONNECT_LOGGING_CONF_PATH") != null) {
+            System.setProperty(
+                    "log4j2.configurationFile", System.getenv("YCONNECT_LOGGING_CONF_PATH"));
+        }
+    }
+
+    private static final Logger log = LogManager.getLogger(YConnectLogger.class.getName());
+
+    public static void debug(Object object, String message) {
+        log.debug("{} ({})", message, object.getClass().getName());
+    }
+
+    public static void info(Object object, String message) {
+        log.info("{} ({})", message, object.getClass().getName());
+    }
+
+    public static void warn(Object object, String message) {
+        log.warn("{} ({})", message, object.getClass().getName());
+    }
+
+    public static void error(Object object, String message) {
+        log.error("{} ({})", message, object.getClass().getName());
+    }
+
+    public static void fatal(Object object, String message) {
+        log.fatal("{} ({})", message, object.getClass().getName());
     }
 }
