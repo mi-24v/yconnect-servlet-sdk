@@ -24,6 +24,23 @@
 
 package jp.co.yahoo.yconnect.core.http;
 
+import jp.co.yahoo.yconnect.core.util.YConnectLogger;
+import org.apache.http.Header;
+import org.apache.http.HttpEntity;
+import org.apache.http.HttpResponse;
+import org.apache.http.client.methods.HttpGet;
+import org.apache.http.client.methods.HttpPost;
+import org.apache.http.client.methods.HttpRequestBase;
+import org.apache.http.conn.ssl.NoopHostnameVerifier;
+import org.apache.http.conn.ssl.SSLConnectionSocketFactory;
+import org.apache.http.conn.ssl.TrustStrategy;
+import org.apache.http.entity.StringEntity;
+import org.apache.http.impl.client.CloseableHttpClient;
+import org.apache.http.impl.client.HttpClientBuilder;
+import org.apache.http.ssl.SSLContextBuilder;
+import org.apache.http.util.EntityUtils;
+
+import javax.net.ssl.SSLContext;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.HttpURLConnection;
@@ -32,23 +49,6 @@ import java.security.KeyStore;
 import java.security.NoSuchAlgorithmException;
 import java.util.ArrayList;
 import java.util.HashMap;
-import javax.net.ssl.SSLContext;
-import jp.co.yahoo.yconnect.core.util.YConnectLogger;
-import org.apache.http.Header;
-import org.apache.http.HttpEntity;
-import org.apache.http.HttpResponse;
-import org.apache.http.client.HttpClient;
-import org.apache.http.client.methods.HttpGet;
-import org.apache.http.client.methods.HttpPost;
-import org.apache.http.client.methods.HttpRequestBase;
-import org.apache.http.conn.ClientConnectionManager;
-import org.apache.http.conn.scheme.Scheme;
-import org.apache.http.conn.scheme.SchemeRegistry;
-import org.apache.http.conn.ssl.SSLSocketFactory;
-import org.apache.http.entity.StringEntity;
-import org.apache.http.impl.client.DefaultHttpClient;
-import org.apache.http.impl.conn.SingleClientConnManager;
-import org.apache.http.util.EntityUtils;
 
 /**
  * HTTP Client Class for YConnect
@@ -57,28 +57,36 @@ import org.apache.http.util.EntityUtils;
  */
 public class YHttpClient {
 
-    /** {@link HttpURLConnection}インスタンス */
-    private HttpClient httpClient = null;
-
-    /** レスポンスのHTTPステータスコード */
+    /**
+     * SSL証明書チェック
+     */
+    private static boolean checkSSL = true; // default true
+    /**
+     * {@link HttpURLConnection}インスタンス
+     */
+    private CloseableHttpClient httpClient = null;
+    /**
+     * レスポンスのHTTPステータスコード
+     */
     private int responseCode;
-
-    /** レスポンスのHTTP応答メッセージ */
-    private String responseMessage;
 
     /**
      * レスポンスヘッダ<br>
      * フィールド名と値の{@link HashMap}
      */
     private final HttpHeaders responseHeaders;
-
-    /** レスポンスボディ */
+    /**
+     * レスポンスのHTTP応答メッセージ
+     */
+    private String responseMessage;
+    /**
+     * レスポンスボディ
+     */
     private String responseBody;
 
-    /** SSL証明書チェック */
-    private static boolean checkSSL = true; // default true
-
-    /** HttpClientのコンストラクタです。 */
+    /**
+     * HttpClientのコンストラクタです。
+     */
     public YHttpClient() {
         // 初期化
         responseCode = 0;
@@ -124,10 +132,34 @@ public class YHttpClient {
     }
 
     /**
+     * SSL証明書のチェックを無効化します。
+     *
+     * @param builder HTTP Client Builder
+     */
+    private static HttpClientBuilder ignoreSSLCertification(HttpClientBuilder builder) {
+        try {
+            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
+            keyStore.load(null, null);
+            SSLContext sslContext = new SSLContextBuilder()
+                    .loadTrustMaterial(keyStore, (TrustStrategy) (chain, authType) -> true)
+                    .build();
+
+            SSLConnectionSocketFactory sslSocketFactory =
+                    new SSLConnectionSocketFactory(sslContext, NoopHostnameVerifier.INSTANCE);
+            builder.setSSLSocketFactory(sslSocketFactory);
+            return builder;
+        } catch (Exception e) {
+            YConnectLogger.error(YHttpClient.class, e.getMessage());
+            e.printStackTrace();
+        }
+        return builder;
+    }
+
+    /**
      * GETメソッドによるHTTPリクエストをします。
      *
-     * @param urlString URL文字列
-     * @param parameters {@link HttpParameters} の {@link ArrayList}
+     * @param urlString      URL文字列
+     * @param parameters     {@link HttpParameters} の {@link ArrayList}
      * @param requestHeaders リクエストヘッダの {@link HashMap}
      */
     public void requestGet(
@@ -157,8 +189,8 @@ public class YHttpClient {
     /**
      * POSTメソッドによるHTTPリクエストをします。
      *
-     * @param urlString URL文字列
-     * @param parameters {@link HttpParameters} の {@link ArrayList}
+     * @param urlString      URL文字列
+     * @param parameters     {@link HttpParameters} の {@link ArrayList}
      * @param requestHeaders リクエストヘッダの {@link HashMap}
      */
     public void requestPost(
@@ -199,7 +231,7 @@ public class YHttpClient {
      * エンドポイントに対してHTTPリクエストします。
      *
      * @param urlString URL文字列
-     * @param request リクエストオブジェクト
+     * @param request   リクエストオブジェクト
      */
     private void request(String urlString, HttpRequestBase request) {
         if (urlString.startsWith("https")) {
@@ -234,52 +266,31 @@ public class YHttpClient {
             e.printStackTrace();
         } finally {
             request.releaseConnection();
-            httpClient.getConnectionManager().shutdown();
+            try {
+                httpClient.close();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
         }
     }
 
     /**
-     * SSL証明書のチェックを無効化します。
-     *
-     * @param httpClient HTTP Client
+     * SSLの設定を行います。
      */
-    @SuppressWarnings("deprecation")
-    private static void ignoreSSLCertification(HttpClient httpClient) {
-        try {
-            KeyStore keyStore = KeyStore.getInstance(KeyStore.getDefaultType());
-            keyStore.load(null, null);
-            SSLSocketFactory sslSocketFactory = new CustomSSLSocketFactory(keyStore);
-
-            sslSocketFactory.setHostnameVerifier(SSLSocketFactory.ALLOW_ALL_HOSTNAME_VERIFIER);
-            Scheme scheme = new Scheme("https", sslSocketFactory, 443);
-            httpClient.getConnectionManager().getSchemeRegistry().register(scheme);
-        } catch (Exception e) {
-            YConnectLogger.error(YHttpClient.class, e.getMessage());
-            e.printStackTrace();
-        }
-    }
-
-    /** SSLの設定を行います。 */
     private void setSSLConfiguration() {
         if (!checkSSL) {
             YConnectLogger.debug(this, "HTTPS ignore SSL Certification");
-            httpClient = new DefaultHttpClient();
-            ignoreSSLCertification(httpClient);
+            httpClient = ignoreSSLCertification(HttpClientBuilder.create()).build();
             return;
         }
 
         try {
             SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(null, null, null);
-            SSLSocketFactory sf = new SSLSocketFactory(sslContext);
-            Scheme httpsScheme = new Scheme("https", 443, sf);
-            SchemeRegistry schemeRegistry = new SchemeRegistry();
-            schemeRegistry.register(httpsScheme);
-            ClientConnectionManager cm = new SingleClientConnManager(schemeRegistry);
-            httpClient = new DefaultHttpClient(cm);
-        } catch (NoSuchAlgorithmException e1) {
-            e1.printStackTrace();
-        } catch (KeyManagementException e1) {
+            httpClient = HttpClientBuilder.create()
+                    .setSSLContext(sslContext)
+                    .build();
+        } catch (NoSuchAlgorithmException | KeyManagementException e1) {
             e1.printStackTrace();
         }
     }
