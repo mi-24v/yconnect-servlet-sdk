@@ -27,6 +27,7 @@ package jp.co.yahoo.yconnect.core.http;
 import jp.co.yahoo.yconnect.core.util.YConnectLogger;
 import org.apache.http.Header;
 import org.apache.http.HttpEntity;
+import org.apache.http.HttpHost;
 import org.apache.http.HttpResponse;
 import org.apache.http.client.methods.HttpGet;
 import org.apache.http.client.methods.HttpPost;
@@ -61,6 +62,10 @@ public class YHttpClient {
      * SSL証明書チェック
      */
     private static boolean checkSSL = true; // default true
+    /**
+     * HTTP Proxy
+     */
+    private static HttpHost httpProxy = null;
     /**
      * {@link HttpURLConnection}インスタンス
      */
@@ -280,7 +285,9 @@ public class YHttpClient {
     private void setSSLConfiguration() {
         if (!checkSSL) {
             YConnectLogger.debug(this, "HTTPS ignore SSL Certification");
-            httpClient = ignoreSSLCertification(HttpClientBuilder.create()).build();
+            httpClient = ignoreSSLCertification(HttpClientBuilder.create())
+                    .setProxy(httpProxy)
+                    .build();
             return;
         }
 
@@ -289,6 +296,7 @@ public class YHttpClient {
             sslContext.init(null, null, null);
             httpClient = HttpClientBuilder.create()
                     .setSSLContext(sslContext)
+                    .setProxy(httpProxy)
                     .build();
         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
             e1.printStackTrace();
@@ -301,5 +309,9 @@ public class YHttpClient {
 
     public static void disableSSLCheck() {
         checkSSL = false;
+    }
+
+    public static void setProxy(String proxyHost, int proxyPort) {
+        httpProxy = new HttpHost(proxyHost, proxyPort);
     }
 }
