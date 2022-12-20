@@ -18,6 +18,8 @@ repositories {
 
 dependencies {
     testImplementation 'junit:junit:4.13.2'
+    testImplementation 'org.mock-server:mockserver-client-java:5.14.0'
+    testImplementation 'org.mock-server:mockserver-junit-rule:5.14.0'
 
     implementation 'javax.json:javax.json-api:1.1.4'
     implementation 'javax.servlet:servlet-api:2.5'
