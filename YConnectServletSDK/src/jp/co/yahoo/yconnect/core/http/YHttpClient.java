@@ -294,8 +294,14 @@ public class YHttpClient {
         try {
             SSLContext sslContext = SSLContext.getInstance("TLSv1.2");
             sslContext.init(null, null, null);
+            SSLConnectionSocketFactory sslSocketFactory = new SSLConnectionSocketFactory(
+                    sslContext,
+                    new String[]{"TLSv1.2"},
+                    null,
+                    SSLConnectionSocketFactory.getDefaultHostnameVerifier()
+            );
             httpClient = HttpClientBuilder.create()
-                    .setSSLContext(sslContext)
+                    .setSSLSocketFactory(sslSocketFactory)
                     .setProxy(httpProxy)
                     .build();
         } catch (NoSuchAlgorithmException | KeyManagementException e1) {
